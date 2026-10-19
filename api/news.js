@@ -6,6 +6,9 @@ const FEEDS = [
   { tag: "drdo", url: "https://news.google.com/rss/search?q=DRDO+OR+HAL+OR+%22Tejas%22+OR+%22BrahMos%22+when:7d&hl=en-IN&gl=IN&ceid=IN:en" },
 ];
 
+// Drop stock-market and investing stories that mention HAL, BEL and others.
+const NOISE = /\b(stocks?|shares?|share price|sensex|nifty|largecap|midcap|smallcap|multibagger|target price|dividend|ipo|portfolio|investors?|brokerage|q[1-4] results)\b/i;
+
 function decode(s) {
   return String(s || "")
     .replace(/<!\[CDATA\[([\s\S]*?)\]\]>/g, "$1")
@@ -29,7 +32,7 @@ async function readFeed(feed) {
     const source = pick(b, "source");
     if (source && title.endsWith(" - " + source)) title = title.slice(0, -(source.length + 3));
     return { title, link: pick(b, "link"), source, date: pick(b, "pubDate"), tag: feed.tag };
-  }).filter(i => i.title && i.link);
+  }).filter(i => i.title && i.link && !NOISE.test(i.title));
 }
 
 module.exports = async (req, res) => {
